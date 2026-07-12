@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.local
+*.log
+npm-debug.log*
+.DS_Store
+.idea/
+.vscode/
+*.tsbuildinfo
+apps/frontend/dist/
+apps/backend/dist/
+postgres-data/
