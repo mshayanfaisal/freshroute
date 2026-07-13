@@ -13,7 +13,7 @@ import { api } from '../../api/client';
 import { Badge, Section } from '../../components/ui';
 import type { ForecastResult } from '../../types';
 
-const CONF_COLOR: Record<string, string> = { low: '#e0a13c', medium: '#7fc7e0', high: '#46b96a' };
+const CONF_COLOR: Record<string, string> = { low: '#e8912b', medium: '#6d5efc', high: '#16b364' };
 
 export default function Forecast() {
   const [data, setData] = useState<ForecastResult | null>(null);
@@ -39,12 +39,12 @@ export default function Forecast() {
           <div style={{ height: 320 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.forecasts}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2c4a34" />
-                <XAxis dataKey="category" stroke="#9db3a2" />
-                <YAxis stroke="#9db3a2" />
-                <Tooltip contentStyle={{ background: '#16241a', border: '1px solid #2c4a34' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(32,36,46,0.08)" />
+                <XAxis dataKey="category" stroke="#7c8698" />
+                <YAxis stroke="#7c8698" />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(32,36,46,0.1)', borderRadius: 12, color: '#20242e' }} />
                 <Bar dataKey="predictedVolume" radius={[6, 6, 0, 0]}>
-                  {data.forecasts.map((f, i) => <Cell key={i} fill={CONF_COLOR[f.confidence] ?? '#46b96a'} />)}
+                  {data.forecasts.map((f, i) => <Cell key={i} fill={CONF_COLOR[f.confidence] ?? '#ff6a3d'} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>

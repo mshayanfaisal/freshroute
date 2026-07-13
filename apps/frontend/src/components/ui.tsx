@@ -10,11 +10,19 @@ export function Badge({ kind, children }: { kind: string; children?: ReactNode }
   return <span className={`badge ${kind}`}>{children ?? titleCase(kind)}</span>;
 }
 
-export function Stat({ label, value }: { label: string; value: ReactNode }) {
+export function Stat({ label, value, bars }: { label: string; value: ReactNode; bars?: number[] }) {
+  // Decorative mini bar-chart (Ware-Sync style). Deterministic default pattern.
+  const pattern = bars ?? [40, 65, 45, 80, 55, 95, 70];
+  const max = Math.max(...pattern, 1);
   return (
     <div className="card stat">
-      <span className="value">{value}</span>
       <span className="label">{label}</span>
+      <span className="value">{value}</span>
+      <div className="spark" aria-hidden>
+        {pattern.map((h, i) => (
+          <i key={i} style={{ height: `${Math.max(12, (h / max) * 100)}%` }} />
+        ))}
+      </div>
     </div>
   );
 }

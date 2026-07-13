@@ -35,7 +35,7 @@ export class DeliveriesService {
     const driver = await this.users.findOne({ where: { id: dto.driverId } });
     if (!driver) throw new NotFoundException('Driver not found');
 
-    return this.dataSource.transaction(async (mgr) => {
+    const runId = await this.dataSource.transaction(async (mgr) => {
       const run = mgr.getRepository(DeliveryRun).create({
         driverId: dto.driverId,
         scheduledDate: dto.scheduledDate,
@@ -85,8 +85,11 @@ export class DeliveriesService {
         stopCount: dto.orderIds.length,
       });
 
-      return this.findRun(savedRun.id);
+      return savedRun.id;
     });
+
+    // Fetch AFTER the transaction commits so the run (and its stops) are visible.
+    return this.findRun(runId);
   }
 
   findRun(id: string): Promise<DeliveryRun> {

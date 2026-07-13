@@ -11,6 +11,7 @@ export default function Catalogue() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [address, setAddress] = useState('');
   const [instructions, setInstructions] = useState('');
+  const [riskFilter, setRiskFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
   const push = useNotifications((s) => s.push);
 
   const load = () => api.get<Produce[]>('/produce/catalogue').then((r) => setItems(r.data));
@@ -43,10 +44,20 @@ export default function Catalogue() {
 
   return (
     <div className="grid cols-3" style={{ gridTemplateColumns: '2fr 1fr', alignItems: 'start' }}>
-      <Section title="Produce Catalogue">
+      <Section
+        title="Produce Catalogue"
+        actions={
+          <select value={riskFilter} onChange={(e) => setRiskFilter(e.target.value as any)} style={{ width: 190 }}>
+            <option value="all">All spoilage risk</option>
+            <option value="high">High risk only</option>
+            <option value="medium">Medium risk only</option>
+            <option value="low">Low risk only</option>
+          </select>
+        }
+      >
         <p className="muted">High-spoilage-risk items are highlighted — grab them before they’re gone.</p>
         <div className="grid cols-3">
-          {items.map((p) => (
+          {items.filter((p) => riskFilter === 'all' || p.spoilageRisk === riskFilter).map((p) => (
             <div key={p.id} className="card" style={p.spoilageRisk === 'high' ? { borderColor: '#e5544b' } : {}}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <h3>{p.name}</h3>

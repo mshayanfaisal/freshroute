@@ -80,6 +80,7 @@ export interface DeliveryStop {
   specialInstructions: string | null;
   status: StopStatus;
   failureReason: string | null;
+  completedAt: string | null;
 }
 
 export interface DeliveryRun {

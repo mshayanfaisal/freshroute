@@ -20,9 +20,18 @@ export default function Complaints() {
   const [lineId, setLineId] = useState('');
   const [description, setDescription] = useState('');
   const [manualCategory, setManualCategory] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
   const [ai, setAi] = useState<Classification | null>(null);
   const [busy, setBusy] = useState(false);
   const push = useNotifications((s) => s.push);
+
+  // Read an attached photo as a data URL (no storage backend needed for the demo).
+  const onPhoto = (file?: File) => {
+    if (!file) { setPhotoUrl(''); return; }
+    const reader = new FileReader();
+    reader.onload = () => setPhotoUrl(String(reader.result));
+    reader.readAsDataURL(file);
+  };
 
   const load = () => {
     api.get<Order[]>('/orders/mine').then((r) => setOrders(r.data.filter((o) => ['delivered', 'disputed'].includes(o.status))));
@@ -54,9 +63,10 @@ export default function Complaints() {
       orderLineId: lineId,
       description,
       manualCategory: manualCategory || undefined,
+      photoUrl: photoUrl || undefined,
     });
     push('Complaint submitted. The farmer has been notified.', 'success');
-    setLineId(''); setDescription(''); setManualCategory(''); setAi(null);
+    setLineId(''); setDescription(''); setManualCategory(''); setPhotoUrl(''); setAi(null);
     load();
   };
 
@@ -72,9 +82,12 @@ export default function Complaints() {
         </select>
         <label>What went wrong?</label>
         <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Half the tomatoes were bruised and mouldy on arrival." />
+        <label>Photo (optional)</label>
+        <input type="file" accept="image/*" onChange={(e) => onPhoto(e.target.files?.[0])} />
+        {photoUrl && <img src={photoUrl} alt="attached" style={{ maxHeight: 90, marginTop: 6, borderRadius: 8 }} />}
 
         <div className="row" style={{ marginTop: '0.6rem' }}>
-          <button className="secondary" disabled={!selected || description.length < 5 || busy} onClick={classify}>
+          <button className="purple" disabled={!selected || description.length < 5 || busy} onClick={classify}>
             {busy ? 'Analysing…' : '🤖 Classify with AI'}
           </button>
         </div>

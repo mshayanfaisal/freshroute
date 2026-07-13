@@ -19,7 +19,7 @@ import {
 import { api } from '../../api/client';
 import { Section, Stat, money } from '../../components/ui';
 
-const COLORS = ['#46b96a', '#f0a640', '#7fc7e0', '#a7a7f0', '#e5544b', '#e0d06a'];
+const COLORS = ['#ff6a3d', '#6d5efc', '#f5451f', '#8b7dff', '#16b364', '#e8912b'];
 
 export default function Analytics() {
   const [summary, setSummary] = useState<any>(null);
@@ -53,11 +53,11 @@ export default function Analytics() {
           <div style={{ height: 280 }}>
             <ResponsiveContainer>
               <BarChart data={waste}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2c4a34" />
-                <XAxis dataKey="category" stroke="#9db3a2" />
-                <YAxis stroke="#9db3a2" />
-                <Tooltip contentStyle={{ background: '#16241a', border: '1px solid #2c4a34' }} />
-                <Bar dataKey="wasteRatePct" fill="#e0a13c" radius={[6, 6, 0, 0]} name="Waste %" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(32,36,46,0.08)" />
+                <XAxis dataKey="category" stroke="#7c8698" />
+                <YAxis stroke="#7c8698" />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(32,36,46,0.1)', borderRadius: 12, color: '#20242e' }} />
+                <Bar dataKey="wasteRatePct" fill="#ff6a3d" radius={[8, 8, 0, 0]} name="Waste %" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -71,7 +71,7 @@ export default function Analytics() {
                 <Pie data={buyers} dataKey="revenue" nameKey="buyer" outerRadius={100} label>
                   {buyers.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#16241a', border: '1px solid #2c4a34' }} />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(32,36,46,0.1)', borderRadius: 12, color: '#20242e' }} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -83,11 +83,11 @@ export default function Analytics() {
           <div style={{ height: 280 }}>
             <ResponsiveContainer>
               <BarChart data={drivers} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#2c4a34" />
-                <XAxis type="number" domain={[0, 100]} stroke="#9db3a2" />
-                <YAxis type="category" dataKey="driver" width={90} stroke="#9db3a2" />
-                <Tooltip contentStyle={{ background: '#16241a', border: '1px solid #2c4a34' }} />
-                <Bar dataKey="successRatePct" fill="#46b96a" radius={[0, 6, 6, 0]} name="Success %" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(32,36,46,0.08)" />
+                <XAxis type="number" domain={[0, 100]} stroke="#7c8698" />
+                <YAxis type="category" dataKey="driver" width={90} stroke="#7c8698" />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(32,36,46,0.1)', borderRadius: 12, color: '#20242e' }} />
+                <Bar dataKey="successRatePct" fill="#16b364" radius={[0, 8, 8, 0]} name="Success %" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -98,11 +98,11 @@ export default function Analytics() {
           <div style={{ height: 280 }}>
             <ResponsiveContainer>
               <LineChart data={buyers}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2c4a34" />
-                <XAxis dataKey="buyer" stroke="#9db3a2" />
-                <YAxis stroke="#9db3a2" />
-                <Tooltip contentStyle={{ background: '#16241a', border: '1px solid #2c4a34' }} />
-                <Line type="monotone" dataKey="orders" stroke="#7fc7e0" strokeWidth={2} name="Orders" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(32,36,46,0.08)" />
+                <XAxis dataKey="buyer" stroke="#7c8698" />
+                <YAxis stroke="#7c8698" />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(32,36,46,0.1)', borderRadius: 12, color: '#20242e' }} />
+                <Line type="monotone" dataKey="orders" stroke="#6d5efc" strokeWidth={3} dot={{ r: 4, fill: "#6d5efc" }} name="Orders" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -118,15 +118,15 @@ export default function Analytics() {
                 innerRadius="40%"
                 outerRadius="100%"
                 data={[
-                  { name: 'Forecast accuracy', value: forecast?.accuracyPct ?? 0, fill: '#46b96a' },
-                  { name: 'Pricing acceptance', value: pricing?.acceptanceRatePct ?? 0, fill: '#f0a640' },
+                  { name: 'Forecast accuracy', value: forecast?.accuracyPct ?? 0, fill: '#ff6a3d' },
+                  { name: 'Pricing acceptance', value: pricing?.acceptanceRatePct ?? 0, fill: '#6d5efc' },
                 ]}
                 startAngle={180}
                 endAngle={0}
               >
                 <RadialBar background dataKey="value" />
                 <Legend iconSize={10} />
-                <Tooltip contentStyle={{ background: '#16241a', border: '1px solid #2c4a34' }} />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(32,36,46,0.1)', borderRadius: 12, color: '#20242e' }} />
               </RadialBarChart>
             </ResponsiveContainer>
           </div>

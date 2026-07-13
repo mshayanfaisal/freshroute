@@ -79,7 +79,7 @@ export default function Listings() {
                     <td><Badge kind={p.spoilageRisk} /></td>
                     <td>{p.isSoldOut ? <Badge kind="cancelled">Sold out</Badge> : <Badge kind="delivered">In stock</Badge>}</td>
                     <td className="row" style={{ gap: '0.35rem' }}>
-                      <button className="secondary" onClick={() => suggestPrice(p.id)} disabled={pricing[p.id]?.loading}>
+                      <button className="purple" onClick={() => suggestPrice(p.id)} disabled={pricing[p.id]?.loading}>
                         {pricing[p.id]?.loading ? '…' : '💡 Price'}
                       </button>
                       <button className="ghost" onClick={() => toggleSoldOut(p)}>{p.isSoldOut ? 'Restock' : 'Sold out'}</button>
