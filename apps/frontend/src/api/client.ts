@@ -1,11 +1,12 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuth } from '../store/auth';
+import { API_BASE } from './base';
 
 /**
  * Axios instance targeting the NestJS backend. Attaches the access token,
  * and transparently refreshes it once on a 401 before failing.
  */
-export const api = axios.create({ baseURL: '/api' });
+export const api = axios.create({ baseURL: `${API_BASE}/api` });
 
 api.interceptors.request.use((config) => {
   const token = useAuth.getState().accessToken;
@@ -19,7 +20,7 @@ async function refreshAccessToken(): Promise<string | null> {
   const { refreshToken, setTokens, clear } = useAuth.getState();
   if (!refreshToken) return null;
   try {
-    const res = await axios.post('/api/auth/refresh', { refreshToken });
+    const res = await axios.post(`${API_BASE}/api/auth/refresh`, { refreshToken });
     setTokens(res.data.accessToken, res.data.refreshToken);
     return res.data.accessToken as string;
   } catch {

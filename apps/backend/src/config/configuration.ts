@@ -12,6 +12,7 @@ export interface AppConfig {
     username: string;
     password: string;
     database: string;
+    ssl: boolean;
   };
   jwt: {
     accessSecret: string;
@@ -20,8 +21,11 @@ export interface AppConfig {
     refreshTtl: string;
   };
   ai: {
+    provider: 'anthropic' | 'gemini';
     apiKey: string;
     model: string;
+    geminiKey: string;
+    geminiModel: string;
     maxTokens: number;
     enabled: boolean;
   };
@@ -37,6 +41,7 @@ export default (): AppConfig => ({
     username: process.env.POSTGRES_USER ?? 'freshroute',
     password: process.env.POSTGRES_PASSWORD ?? 'freshroute_pw',
     database: process.env.POSTGRES_DB ?? 'freshroute',
+    ssl: process.env.POSTGRES_SSL === 'true',
   },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET ?? 'dev_access_secret',
@@ -44,13 +49,21 @@ export default (): AppConfig => ({
     refreshSecret: process.env.JWT_REFRESH_SECRET ?? 'dev_refresh_secret',
     refreshTtl: process.env.JWT_REFRESH_TTL ?? '7d',
   },
-  ai: {
-    apiKey: process.env.ANTHROPIC_API_KEY ?? '',
-    model: process.env.AI_MODEL ?? 'claude-opus-4-8',
-    maxTokens: parseInt(process.env.AI_MAX_TOKENS ?? '1024', 10),
-    // AI is considered "enabled" only if explicitly on AND an API key exists.
-    enabled:
-      (process.env.AI_ENABLED ?? 'true') === 'true' &&
-      !!process.env.ANTHROPIC_API_KEY,
-  },
+  ai: (() => {
+    const provider = (process.env.AI_PROVIDER ?? 'anthropic') as 'anthropic' | 'gemini';
+    const apiKey = process.env.ANTHROPIC_API_KEY ?? '';
+    const geminiKey = process.env.GEMINI_API_KEY ?? '';
+    const on = (process.env.AI_ENABLED ?? 'true') === 'true';
+    // "enabled" = explicitly on AND the selected provider has a key.
+    const hasKey = provider === 'gemini' ? !!geminiKey : !!apiKey;
+    return {
+      provider,
+      apiKey,
+      model: process.env.AI_MODEL ?? 'claude-opus-4-8',
+      geminiKey,
+      geminiModel: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash',
+      maxTokens: parseInt(process.env.AI_MAX_TOKENS ?? '1024', 10),
+      enabled: on && hasKey,
+    };
+  })(),
 });

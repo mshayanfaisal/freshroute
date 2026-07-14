@@ -1,0 +1,60 @@
+# Render Blueprint — deploys the FreshRoute NestJS backend as a free Docker web service.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# The backend Dockerfile already runs migrations (+ optional seed) on boot, then
+# starts NestJS. The database is your existing Neon instance (set the secret
+# values in the Render dashboard — they are marked sync:false so they are NOT
+# committed to git).
+services:
+  - type: web
+    name: freshroute-api
+    runtime: docker
+    repo: https://github.com/mshayanfaisal/freshroute
+    dockerfilePath: apps/backend/Dockerfile
+    dockerContext: apps/backend
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BACKEND_PORT
+        value: "3000"
+      - key: POSTGRES_SSL
+        value: "true"
+      - key: RUN_MIGRATIONS
+        value: "true"
+      - key: RUN_SEED
+        value: "true"
+      - key: AI_PROVIDER
+        value: gemini
+      - key: AI_ENABLED
+        value: "true"
+      - key: AI_MAX_TOKENS
+        value: "1024"
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      # ---- secrets: set these in the Render dashboard (Environment tab) ----
+      - key: POSTGRES_HOST
+        sync: false
+      - key: POSTGRES_PORT
+        value: "5432"
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: POSTGRES_DB
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Set this to your Firebase Hosting URL after the first frontend deploy,
+      # e.g. https://freshroute-6f348.web.app  (comma-separate for multiple).
+      - key: FRONTEND_ORIGIN
+        sync: false

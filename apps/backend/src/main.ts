@@ -13,8 +13,14 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api', { exclude: ['health'] });
 
+  // FRONTEND_ORIGIN may be a comma-separated list (dev + Firebase domain, etc.).
+  const origins = config
+    .get('frontendOrigin', { infer: true })
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
   app.enableCors({
-    origin: config.get('frontendOrigin', { infer: true }),
+    origin: origins.length === 1 && origins[0] === '*' ? true : origins,
     credentials: true,
   });
 

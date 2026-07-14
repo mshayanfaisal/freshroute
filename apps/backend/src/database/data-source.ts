@@ -19,6 +19,8 @@ export const AppDataSource = new DataSource({
   username: process.env.POSTGRES_USER ?? 'freshroute',
   password: process.env.POSTGRES_PASSWORD ?? 'freshroute_pw',
   database: process.env.POSTGRES_DB ?? 'freshroute',
+  // Enable SSL for managed providers (Neon, RDS, etc.) via POSTGRES_SSL=true.
+  ssl: process.env.POSTGRES_SSL === 'true' ? { rejectUnauthorized: false } : false,
   entities: [join(__dirname, '../modules/**/*.entity.{ts,js}')],
   migrations: [join(__dirname, './migrations/*.{ts,js}')],
   synchronize: false,

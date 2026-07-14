@@ -58,7 +58,10 @@ export interface RouteResult {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
   private readonly client: Anthropic | null;
+  private readonly provider: 'anthropic' | 'gemini';
   private readonly model: string;
+  private readonly geminiKey: string;
+  private readonly geminiModel: string;
   private readonly maxTokens: number;
   private readonly enabled: boolean;
 
@@ -69,12 +72,23 @@ export class AiService {
   ) {
     const ai = this.config.get('ai', { infer: true });
     this.enabled = ai.enabled;
+    this.provider = ai.provider;
     this.model = ai.model;
+    this.geminiKey = ai.geminiKey;
+    this.geminiModel = ai.geminiModel;
     this.maxTokens = ai.maxTokens;
-    this.client = ai.enabled ? new Anthropic({ apiKey: ai.apiKey }) : null;
-    if (!this.enabled) {
-      this.logger.warn('AI disabled (no ANTHROPIC_API_KEY) — serving deterministic fallbacks.');
+    // Only construct the Anthropic client when that provider is selected & enabled.
+    this.client =
+      ai.enabled && ai.provider === 'anthropic' ? new Anthropic({ apiKey: ai.apiKey }) : null;
+    if (this.enabled) {
+      this.logger.log(`AI enabled via ${this.provider} (${this.providerModel()}).`);
+    } else {
+      this.logger.warn('AI disabled (no provider key) — serving deterministic fallbacks.');
     }
+  }
+
+  private providerModel(): string {
+    return this.provider === 'gemini' ? this.geminiModel : this.model;
   }
 
   get isEnabled(): boolean {
@@ -102,7 +116,7 @@ export class AiService {
       usedFallback: true,
     });
 
-    if (!this.client) return this.log(AiFeature.DEMAND_FORECAST, userId, null, { currentWeekOfYear, history }, fallback());
+    if (!this.enabled) return this.log(AiFeature.DEMAND_FORECAST, userId, null, { currentWeekOfYear, history }, fallback());
 
     try {
       const json = await this.complete(SYSTEM_PROMPTS.forecast, buildForecastPrompt({ currentWeekOfYear, history }));
@@ -149,7 +163,7 @@ export class AiService {
       };
     };
 
-    if (!this.client) return this.log(AiFeature.DYNAMIC_PRICING, userId, subjectId, ctx, fallback());
+    if (!this.enabled) return this.log(AiFeature.DYNAMIC_PRICING, userId, subjectId, ctx, fallback());
 
     try {
       const json = await this.complete(SYSTEM_PROMPTS.pricing, buildPricingPrompt(ctx));
@@ -185,7 +199,7 @@ export class AiService {
       usedFallback: true,
     });
 
-    if (!this.client) return this.log(AiFeature.COMPLAINT_CLASSIFIER, userId, subjectId, ctx, fallback());
+    if (!this.enabled) return this.log(AiFeature.COMPLAINT_CLASSIFIER, userId, subjectId, ctx, fallback());
 
     try {
       const json = await this.complete(SYSTEM_PROMPTS.complaint, buildComplaintPrompt(ctx));
@@ -214,7 +228,7 @@ export class AiService {
       usedFallback: true,
     });
 
-    if (!this.client) return this.log(AiFeature.ROUTE_OPTIMISER, userId, subjectId, { stops, constraints }, fallback());
+    if (!this.enabled) return this.log(AiFeature.ROUTE_OPTIMISER, userId, subjectId, { stops, constraints }, fallback());
 
     try {
       const json = await this.complete(SYSTEM_PROMPTS.route, buildRoutePrompt({ stops, constraints }));
@@ -234,18 +248,49 @@ export class AiService {
 
   /** One LLM round-trip returning a parsed JSON object. Throws on any failure. */
   private async complete(system: string, userPrompt: string): Promise<Record<string, any>> {
+    const text =
+      this.provider === 'gemini'
+        ? await this.completeGemini(system, userPrompt)
+        : await this.completeAnthropic(system, userPrompt);
+    return this.parseJson(text.trim());
+  }
+
+  private async completeAnthropic(system: string, userPrompt: string): Promise<string> {
     const res = await this.client!.messages.create({
       model: this.model,
       max_tokens: this.maxTokens,
       system,
       messages: [{ role: 'user', content: userPrompt }],
     });
-    const text = res.content
+    return res.content
       .filter((b: any) => b.type === 'text')
       .map((b: any) => b.text)
-      .join('')
-      .trim();
-    return this.parseJson(text);
+      .join('');
+  }
+
+  /** Google Gemini via the Generative Language REST API (API-key auth). */
+  private async completeGemini(system: string, userPrompt: string): Promise<string> {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.geminiModel}:generateContent?key=${this.geminiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        // responseMimeType forces a clean JSON body — ideal for our deterministic parsing.
+        generationConfig: { maxOutputTokens: this.maxTokens, temperature: 0.4, responseMimeType: 'application/json' },
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Gemini ${res.status}: ${body.slice(0, 200)}`);
+    }
+    const data: any = await res.json();
+    const text = (data?.candidates?.[0]?.content?.parts ?? [])
+      .map((p: any) => p.text ?? '')
+      .join('');
+    if (!text) throw new Error('Gemini returned an empty response');
+    return text;
   }
 
   /** Robustly extract the first JSON object from a model response. */

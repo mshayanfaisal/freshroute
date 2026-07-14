@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './auth';
 import { useNotifications } from './notifications';
+import { API_BASE } from '../api/base';
 
 let socket: Socket | null = null;
 
@@ -38,7 +39,8 @@ export const onRealtime = (fn: Listener): (() => void) => {
 export function connectSocket() {
   const token = useAuth.getState().accessToken;
   if (!token || socket) return;
-  socket = io('/ws', { auth: { token }, transports: ['websocket', 'polling'] });
+  // Dev: API_BASE is '' → '/ws' (Vite proxy). Prod: absolute backend origin + '/ws'.
+  socket = io(`${API_BASE}/ws`, { auth: { token }, transports: ['websocket', 'polling'] });
 
   Object.keys(EVENT_TEXT).forEach((event) => {
     socket!.on(event, (payload: any) => {

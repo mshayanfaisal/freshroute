@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../store/auth';
+import { API_BASE } from '../api/base';
 import type { UserRole } from '../types';
 
 export default function Register() {
@@ -20,7 +21,7 @@ export default function Register() {
     setError('');
     setLoading(true);
     try {
-      const res = await axios.post('/api/auth/register', form);
+      const res = await axios.post(`${API_BASE}/api/auth/register`, form);
       setSession(res.data);
       navigate(`/${res.data.user.role}`);
     } catch (err: any) {

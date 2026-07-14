@@ -18,6 +18,7 @@ import { AppConfig } from '../config/configuration';
           username: db.username,
           password: db.password,
           database: db.database,
+          ssl: db.ssl ? { rejectUnauthorized: false } : false,
           entities: [join(__dirname, '../modules/**/*.entity.{ts,js}')],
           migrations: [join(__dirname, './migrations/*.{ts,js}')],
           // Migrations own the schema. Never synchronize in any environment.
