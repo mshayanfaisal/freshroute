@@ -58,7 +58,7 @@ async function bootstrap() {
   });
 
   const port = config.get('port', { infer: true });
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   logger.log(`FreshRoute backend listening on http://localhost:${port}`);
   logger.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }

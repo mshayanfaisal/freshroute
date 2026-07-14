@@ -33,7 +33,8 @@ export interface AppConfig {
 
 export default (): AppConfig => ({
   nodeEnv: process.env.NODE_ENV ?? 'development',
-  port: parseInt(process.env.BACKEND_PORT ?? '3000', 10),
+  // Koyeb/Render/most PaaS inject PORT; fall back to BACKEND_PORT, then 3000.
+  port: parseInt(process.env.PORT ?? process.env.BACKEND_PORT ?? '3000', 10),
   frontendOrigin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173',
   db: {
     host: process.env.POSTGRES_HOST ?? 'localhost',
