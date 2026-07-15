@@ -7,7 +7,7 @@ import { useNotifications } from '../../store/notifications';
 import { Badge, Section, Stat } from '../../components/ui';
 import type { DeliveryRun, DeliveryStop } from '../../types';
 
-// Fix Leaflet's default marker icons under a bundler.
+// Configure default Leaflet marker icons.
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
