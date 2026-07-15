@@ -37,7 +37,7 @@ dynamically, classify quality complaints, and optimise delivery routes.
 | Database | PostgreSQL 15 (Dockerised) |
 | Auth | JWT access + refresh pair (Passport.js), bcrypt, role guards |
 | Real-time | Socket.io gateway with per-user / per-role rooms |
-| AI | Anthropic Claude (`claude-opus-4-8`) via a NestJS proxy — **no keys in the frontend** |
+| AI | Multi-provider LLM via a NestJS proxy (Anthropic Claude, Google Gemini, or OpenAI-compatible gateway) — **no keys in the frontend** |
 | API docs | Swagger, auto-generated at `/api/docs` |
 | Testing | Jest + Supertest (controller/role-guard integration tests) |
 
@@ -127,7 +127,15 @@ catalogue and trigger farmer alerts via the hourly cron.
 ## <a name="ai-proxy"></a>7. AI proxy & graceful degradation
 
 All LLM calls route through `modules/ai` — the React client only ever calls authenticated
-`/api/ai/*` endpoints. Every feature has a deterministic fallback (see `ai.service.ts`):
+`/api/ai/*` endpoints. The backend supports **three interchangeable providers**:
+
+| Provider | Env vars | Default model |
+|---|---|---|
+| Anthropic | `AI_PROVIDER=anthropic`, `ANTHROPIC_API_KEY` | `claude-opus-4-8` |
+| Google Gemini | `AI_PROVIDER=gemini`, `GEMINI_API_KEY` | `gemini-2.0-flash` |
+| OpenAI-compatible | `AI_PROVIDER=openai`, `OPENAI_API_KEY`, `OPENAI_BASE_URL` | `gpt-4o-mini` |
+
+Every feature has a deterministic fallback (see `ai.service.ts`):
 
 | Feature | Endpoint | Fallback when AI unavailable |
 |---|---|---|
@@ -136,9 +144,9 @@ All LLM calls route through `modules/ai` — the React client only ever calls au
 | 3. Complaint classifier | `POST /api/ai/classify-complaint` | manual category dropdown |
 | 4. Route optimiser (bonus) | `POST /api/ai/optimise-route` | nearest-neighbour heuristic |
 
-Set `ANTHROPIC_API_KEY` in `.env` to enable live AI. Leave it blank and everything still
-works via fallbacks (`GET /api/ai/status` reports which mode is active). Every suggestion is
-logged to `ai_suggestions` for the accuracy analytics.
+Set `AI_PROVIDER` and the corresponding API key in `.env` to enable live AI. Leave the key
+blank and everything still works via fallbacks (`GET /api/ai/status` reports which mode is
+active). Every suggestion is logged to `ai_suggestions` for the accuracy analytics.
 
 ## <a name="real-time"></a>8. Real-time (WebSocket)
 
@@ -161,8 +169,8 @@ wired in — click *Authorize*, paste an access token, and exercise every endpoi
 ## <a name="testing"></a>11. Testing
 
 ```bash
-npm run test          # backend Jest + Supertest
-npm run test:cov      # with coverage report
+npm run test                    # backend Jest + Supertest (from root)
+npm run test:cov -w apps/backend  # with coverage report (backend workspace)
 ```
 
 35 integration tests cover authentication and **role-guard enforcement** (401/403) across all

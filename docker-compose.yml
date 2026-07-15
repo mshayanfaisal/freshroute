@@ -1,3 +1,4 @@
+#this is the docker compose file
 services:
   db:
     image: postgres:15-alpine
