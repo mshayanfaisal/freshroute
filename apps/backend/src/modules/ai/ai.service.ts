@@ -58,10 +58,13 @@ export interface RouteResult {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
   private readonly client: Anthropic | null;
-  private readonly provider: 'anthropic' | 'gemini';
+  private readonly provider: 'anthropic' | 'gemini' | 'openai';
   private readonly model: string;
   private readonly geminiKey: string;
   private readonly geminiModel: string;
+  private readonly openaiBaseUrl: string;
+  private readonly openaiKey: string;
+  private readonly openaiModel: string;
   private readonly maxTokens: number;
   private readonly enabled: boolean;
 
@@ -76,6 +79,9 @@ export class AiService {
     this.model = ai.model;
     this.geminiKey = ai.geminiKey;
     this.geminiModel = ai.geminiModel;
+    this.openaiBaseUrl = ai.openaiBaseUrl;
+    this.openaiKey = ai.openaiKey;
+    this.openaiModel = ai.openaiModel;
     this.maxTokens = ai.maxTokens;
     // Only construct the Anthropic client when that provider is selected & enabled.
     this.client =
@@ -88,7 +94,9 @@ export class AiService {
   }
 
   private providerModel(): string {
-    return this.provider === 'gemini' ? this.geminiModel : this.model;
+    if (this.provider === 'gemini') return this.geminiModel;
+    if (this.provider === 'openai') return this.openaiModel;
+    return this.model;
   }
 
   get isEnabled(): boolean {
@@ -251,7 +259,9 @@ export class AiService {
     const text =
       this.provider === 'gemini'
         ? await this.completeGemini(system, userPrompt)
-        : await this.completeAnthropic(system, userPrompt);
+        : this.provider === 'openai'
+          ? await this.completeOpenAI(system, userPrompt)
+          : await this.completeAnthropic(system, userPrompt);
     return this.parseJson(text.trim());
   }
 
@@ -293,6 +303,36 @@ export class AiService {
     return text;
   }
 
+  /** OpenAI-compatible Chat Completions gateway (e.g. Bynara). Bearer-token auth. */
+  private async completeOpenAI(system: string, userPrompt: string): Promise<string> {
+    const res = await fetch(`${this.openaiBaseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.openaiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.openaiModel,
+        max_tokens: this.maxTokens,
+        temperature: 0.4,
+        // Ask for a JSON object so parseJson gets a clean body (ignored by gateways that don't support it).
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`OpenAI-compat ${res.status}: ${body.slice(0, 200)}`);
+    }
+    const data: any = await res.json();
+    const text = data?.choices?.[0]?.message?.content ?? '';
+    if (!text) throw new Error('OpenAI-compat gateway returned an empty response');
+    return text;
+  }
+
   /** Robustly extract the first JSON object from a model response. */
   private parseJson(text: string): Record<string, any> {
     try {
@@ -321,7 +361,7 @@ export class AiService {
           inputContext: input,
           output: output as unknown as Record<string, unknown>,
           usedFallback: output.usedFallback,
-          model: output.usedFallback ? null : this.model,
+          model: output.usedFallback ? null : this.providerModel(),
           predictedValue: null,
           actualValue: null,
           accepted: null,

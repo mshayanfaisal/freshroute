@@ -21,11 +21,15 @@ export interface AppConfig {
     refreshTtl: string;
   };
   ai: {
-    provider: 'anthropic' | 'gemini';
+    provider: 'anthropic' | 'gemini' | 'openai';
     apiKey: string;
     model: string;
     geminiKey: string;
     geminiModel: string;
+    // OpenAI-compatible gateway (e.g. Bynara router.bynara.id/v1).
+    openaiBaseUrl: string;
+    openaiKey: string;
+    openaiModel: string;
     maxTokens: number;
     enabled: boolean;
   };
@@ -51,18 +55,23 @@ export default (): AppConfig => ({
     refreshTtl: process.env.JWT_REFRESH_TTL ?? '7d',
   },
   ai: (() => {
-    const provider = (process.env.AI_PROVIDER ?? 'anthropic') as 'anthropic' | 'gemini';
+    const provider = (process.env.AI_PROVIDER ?? 'anthropic') as 'anthropic' | 'gemini' | 'openai';
     const apiKey = process.env.ANTHROPIC_API_KEY ?? '';
     const geminiKey = process.env.GEMINI_API_KEY ?? '';
+    const openaiKey = process.env.OPENAI_API_KEY ?? '';
     const on = (process.env.AI_ENABLED ?? 'true') === 'true';
     // "enabled" = explicitly on AND the selected provider has a key.
-    const hasKey = provider === 'gemini' ? !!geminiKey : !!apiKey;
+    const hasKey =
+      provider === 'gemini' ? !!geminiKey : provider === 'openai' ? !!openaiKey : !!apiKey;
     return {
       provider,
       apiKey,
       model: process.env.AI_MODEL ?? 'claude-opus-4-8',
       geminiKey,
       geminiModel: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash',
+      openaiBaseUrl: (process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, ''),
+      openaiKey,
+      openaiModel: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
       maxTokens: parseInt(process.env.AI_MAX_TOKENS ?? '1024', 10),
       enabled: on && hasKey,
     };
